@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+    <head>
+      <title>Book details</title>
+      <style>
+        form  { display: table; border; border: 10px double black; padding: 25px 15px 25px 15px; background-color: gray; border-radius: 10px;}
+        p     { display: table-row;  }
+        label { display: table-cell; }
+        input { display: table-cell; }
+        #button{
+          font-size:20px;
+          cursor: pointer;
+        }
+        
+      </style>
+    </head>
+
+<body style="margin-top:20px; background-color:darkgray" >
+
+<center>
+
+  <h2>Book Details</h2>
+
+  <form method="post" enctype="multipart/form-data" action="/admin">
+
+    Book_id  <input type="number" placeholder="Book_id" name="bookid"><br/><br/>
+
+    Book_name  <input type="text" placeholder="Book_name" name="bookname"><br/><br/>
+
+    Author  <input type="text" placeholder="Author" name="author"><br/><br/>    
+
+    Description  <textarea name="message" rows="10" cols="30" placeholder="Description"></textarea><br/><br/>
+
+    Price  <input type="number" step="any" min="0" placeholder="Price" name="price"><br/><br/>
+
+    Subject  <input type="text" placeholder="Subject_code" name="subject"><br/><br/>
+
+    <input type="file" name="image">
+
+    <button type="submit">Upload</button><br><br>    
+
+  </form>
+
+</center>
+
+</body>
+
+</html>

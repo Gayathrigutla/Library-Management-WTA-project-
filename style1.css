@@ -1,0 +1,160 @@
+#container{
+    height:auto;
+    width:110px;
+    background-color:white;
+    background-color:paleturquoise;
+    margin-left: auto;
+    margin-right: auto;
+}
+.tree{
+  position: absolute;
+  left:790px;
+  top:35px;
+}
+#mainbody{
+    background-color:paleturquoise;
+    width:1000px;
+    height:600px;
+    margin-left:auto;
+    margin-right:auto;
+    margin-top:-500px;
+    margin-bottom:auto;
+}
+#sidebar{
+    position: absolute;
+    left:30px;
+    top:250px;
+    padding:30px;
+    height:400px;
+    width:250px;
+    background-color:#2AA1B5;
+    display:block;
+    border-radius: 15px 150px 30px 15px;
+
+}
+#sidebar li{
+    width:1000px;
+    height:70px;
+}
+#footer{
+    position: absolute;
+    background-color:orange;
+    width:300px;
+    height:400px;
+    bottom:110px;
+    right:73px;
+    border-radius: 7px 7px 7px 7px;
+}
+#ece{
+    position: absolute;
+    bottom: 350px;
+    left:750px;
+}
+.cs{
+    position:absolute;
+    bottom: 350px;
+}
+.cs1{
+  position: absolute;
+  right:100px;
+}
+#eee{
+  position:absolute;
+  bottom: 350px;
+  right:520px;
+  text-align-last: center;
+}
+#civil{
+  position:absolute;
+  bottom: 70px;
+}
+#mech
+{
+  position:absolute;
+  bottom: 70px;
+  left:750px;
+  text-align-last: center;
+}
+#mining{
+  position:absolute;
+  bottom: 70px;
+  right:520px;
+  text-align-last: center;
+
+}
+
+body{
+  background: #f2f2f2;
+  font-family: 'Open Sans', sans-serif;
+}
+
+.search {
+  width: 50%;
+  position: absolute;
+  display:flex;
+}
+
+.searchTerm {
+  width: 100%;
+  border: 3px solid rgb(229, 245, 246);
+  border-right: none;
+  padding: 5px;
+  height: 20px;
+  border-radius: 5px 0 0 5px;
+  outline: none;
+  color: #9DBFAF;
+}
+
+.searchTerm:focus{
+  color: rgb(0, 0, 0);
+}
+
+.searchButton {
+  width: 40px;
+  height: 36px;
+  border: 1px solid #00B4CC;
+  background: rgb(3, 185, 185);
+  text-align: center;
+  color: #fff;
+  border-radius: 0 5px 5px 0;
+  cursor: pointer;
+  font-size: 20px;
+}
+
+/*Resize the wrap to see the search bar change!*/
+.wrap{
+  width: 30%;
+  position: absolute;
+  top: 30%;
+  left: 93%;
+  transform: translate(-50%, -50%);
+}
+#head{
+  animation: animate 2s ease-in-out infinite;
+  animation-delay: calc(1s);
+  letter-spacing: 2px;
+}
+@keyframes animate{
+  0%{
+    transform:translateY(0px);
+  }
+  20%
+  {
+    transform:translateY(-20%);
+  }
+  40%,100%
+  {
+    transform:translateY(-20%);
+  }
+}
+.header{
+position:absolute;
+top:60px;
+right:130px;
+}
+#mainbody img{
+  border-radius: 30px 30px 30px 30px;
+}
+.rotateimg{
+  transform: scaleX(-1);
+}

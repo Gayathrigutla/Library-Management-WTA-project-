@@ -71,11 +71,11 @@ app.post('/admin', upload.single('image'), function(req, res) {
     console.log('inside post');
     console.log(req.file);
     console.log(req.body);
-
+    
     var loc = __dirname + '/' + req.file.path;
     console.log(loc);
- 
-    if(req.body.bookid)
+
+    if(req.body.bookname)
         {
             var values = {
                 book_id: req.body.bookid, 
@@ -86,20 +86,31 @@ app.post('/admin', upload.single('image'), function(req, res) {
                 Price: req.body.price, 
                 Availability: '1',
                 subject_code: req.body.subject
-                };
-            console.log(values);
-            var sql = "INSERT INTO `new_sem4_project`.`book` SET ?";
-            mysqlConnection.query(sql, [values], function(err, result, fields) {
-                if(err)
-                    throw err;
+            
+            };
+            
+            mysqlConnection.query("SELECT * FROM `new_sem4_project`.`book` WHERE Book_name = ?", [values.Book_name], function (err, result, fields) {
+                if (err) throw err;
                 console.log(result);
-                mysqlConnection.query("SELECT book_id FROM book", function (err, result, fields) {
-                    if (err) throw err;
-                    console.log(result);
-                });
+                if(result.length > 0)
+                {
+                    var avail = result.Availability;
+                    console.log(avail);
+                    console.log(result.Availability);
+                }
+                else
+                {
+                    console.log(values);
+                    var sql = "INSERT INTO `new_sem4_project`.`book` SET ?";
+                    mysqlConnection.query(sql, [values], function(err, result, fields) {
+                        if(err)
+                            throw err;
+                        console.log(result);
+                        
+                    });
+                }    
             });
         }
-
         res.render('wtafrontpage.ejs');
 });
 

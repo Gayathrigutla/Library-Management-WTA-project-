@@ -89,14 +89,17 @@ app.post('/admin', upload.single('image'), function(req, res) {
             
             };
             
-            mysqlConnection.query("SELECT * FROM `new_sem4_project`.`book` WHERE Book_name = ?", [values.Book_name], function (err, result, fields) {
+            mysqlConnection.query("SELECT * FROM `new_sem4_project`.`book` WHERE Book_name = ? AND  book_author = ?", [values.Book_name, values.book_author], function (err, result, fields) {
                 if (err) throw err;
                 console.log(result);
+                
                 if(result.length > 0)
                 {
-                    var avail = result.Availability;
-                    console.log(avail);
-                    console.log(result.Availability);
+                    mysqlConnection.query("UPDATE `book` SET Availability = (Availability + 1) WHERE Book_name = ?", [values.Book_name], function (err, result, fields) {
+                        if(err) throw err;
+                        console.log(result);
+                    })
+
                 }
                 else
                 {

@@ -66,7 +66,7 @@ app.get('/admin', function(req, res){
         res.render('admin.ejs');
 });
 
-app.post('/admin', upload.single('image'), function(req, res) {
+app.post('/admin', urlencodedParser, upload.single('image'), function(req, res) {
     
     console.log('inside post');
     console.log(req.file);
@@ -92,6 +92,7 @@ app.post('/admin', upload.single('image'), function(req, res) {
             mysqlConnection.query("SELECT * FROM `new_sem4_project`.`book` WHERE Book_name = ? AND  book_author = ?", [values.Book_name, values.book_author], function (err, result, fields) {
                 if (err) throw err;
                 console.log(result);
+                console.log(fields);
                 
                 if(result.length > 0)
                 {

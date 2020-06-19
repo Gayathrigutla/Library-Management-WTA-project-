@@ -3,9 +3,12 @@ const express = require("express");
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const fs = require('fs');
+var ejs = require('ejs');
+const store = require('store');
+const nodemailer = require('nodemailer'); 
 
-var userid = 5;
-var bookid = 5;
+//var userid = 5;
+//var bookid = 5;
 
 var app = express();
 
@@ -54,15 +57,6 @@ var msg = {
     password : ""
 };
 
-var book_id_from_cart;
-var user_id_logged;
-var myFunction = function (data) {
-    console.log('inside');
-    console.log(data);
-    book_id_from_cart = data;
-    console.log(book_id_from_cart);
-}
-
 // GET requests
 
 app.get('/',function(req, res){
@@ -78,6 +72,7 @@ app.get('/dsa',function(req, res){
     mysqlConnection.query('Select * from new_Sem4_Project.book where subject_code = ?',
         ['DSA'], function(err, result, fields){
             if(err) throw err;
+            console.log(result.length);
             res.render('dsa',{container: result});
         })
 })
@@ -123,6 +118,11 @@ app.get('/acd',function(req, res){
 })
 
 
+app.get('/thanks',function(req,res){
+    res.render('thanks');
+})
+
+
 app.get('/admin', function(req, res){
        
         res.render('admin.ejs');
@@ -138,17 +138,20 @@ app.get('/wtafrontpage', function(req, res){
 
 app.get('/myaccount', function(req, res){
     console.log('Entered myaccount');
-    var val = userid;
-    mysqlConnection.query('Select * from new_Sem4_Project.purchase_table where uid = ?',
+    //var val = userid;
+    var val = store.get('userid').name;
+    mysqlConnection.query('Select book_name, book_author, purchase_time, username, Email, Phone_number from purchase_table inner join Users on purchase_table.uid = Users.User_id where uid = ?',
         [val], function(err, result, fields){
             if(err) throw err;
+            console.log(result);
             res.render('myaccount',{myaccount: result});
         })
 })
 
 app.get('/cart', function(req, res){
     console.log('Entered cart');
-    var val = userid;
+    //var val = userid;
+    var val = store.get('userid').name;
     mysqlConnection.query('Select * from new_Sem4_Project.cart where uid = ?',
         [val], function(err, result, fields){
             if(err) throw err;
@@ -156,9 +159,7 @@ app.get('/cart', function(req, res){
             mysqlConnection.query('select sum(price_of_book*no_of_books) as total_price from new_Sem4_Project.cart where uid = ?',
                 [val], function(err2, result2, fields2){
                     if(err2) throw err2;
-                    console.log('result2');
-                    console.log(result2);
-                    res.render('cart',{cart: result, total: result2[0].total_price});
+                    res.render('cart.ejs',{cart: result, total: result2[0].total_price});
         })
 })
 })
@@ -171,10 +172,12 @@ app.get('/proceed', function(req, res){
 
 app.post('/proceed', urlencodedParser, function(req, res){
     console.log('Proceed to buy');
-    var value = userid;
+    //var value = userid;
+    var value = store.get('userid').name;
     mysqlConnection.query('select * from new_Sem4_Project.cart where uid = ?',
         [value], function(err, result ,fields){
-            if(result.length == 0){
+            console.log(result[0]);
+            if(result[0] == null){
                 res.send('There are no books in your cart');
                 console.log('No books in cart');
             }
@@ -183,7 +186,7 @@ app.post('/proceed', urlencodedParser, function(req, res){
                 for(i = 0; i < result.length; i++)
                 {
                     var values2 = {
-                        uid : userid,
+                        uid : store.get('userid').name,
                         bid : result[i].bid,
                         book_name : result[i].bookname,
                         book_author : result[i].bookauthor,
@@ -202,20 +205,34 @@ app.post('/proceed', urlencodedParser, function(req, res){
                                             console.log('1 record deleted from Books table');
                                         }
                                     })
+                                mysqlConnection.query('delete from cart where uid = ?',
+                                    [values2.uid],function(err, result, fields){
+                                        if(err)throw err;
+                                        else{
+                                            console.log('cart cleared');
+                                        }
+                                    })
                             }
                             else if(result[0] < values2.no_of_books){
                                 res.send('No Enough books');
                                 console.log('no enouh books');
                             }
                             else{
-                                mysqlConnection.query('update new_Sem4_Project.Book set Availability = (Availability - 1) where Book_name = ? and book_author = ?',
-                                    [values2.no_of_books, values2.bookname, values2.bookauthor], function(err, result, fields){
+                                
+                                mysqlConnection.query("Update Book set Availability = (Availability - ?) where Book_name = ? and book_author = ?",
+                                    [values2.no_of_books, values2.book_name, values2.book_author], function(err, result, fields){
                                         if(err) throw err;
                                         else{
                                             console.log('updated one record');
                                         }
                                     })
-
+                                mysqlConnection.query('delete from cart where uid = ?',
+                                    [values2.uid],function(err, result, fields){
+                                        if(err)throw err;
+                                        else{
+                                            console.log('cart cleared');
+                                        }
+                                    })
                             }
                         })
                     mysqlConnection.query('Insert into new_Sem4_Project.purchase_table set ?',
@@ -224,8 +241,33 @@ app.post('/proceed', urlencodedParser, function(req, res){
                             console.log('record entered');
                         })
                 }
+                
+                var transporter = nodemailer.createTransport({
+                    service: 'gmail',
+                    auth: {
+                        user: 'gayathrihogwarts@gmail.com',
+                        pass: 'Pinky@1998'
+                        }
+                    });
+
+                var mailOptions = {
+                    from: 'gayathrihogwarts@gmail.com',
+                    to: 'gayathrihogwarts@gmail.com',
+                    subject: 'Sending Email using Node.js',
+                    text: 'That was easy!'
+                };
+
+                transporter.sendMail(mailOptions, function(error, info){
+                    if (error) {
+                        console.log(error);
+                    } else {
+                    console.log('Email sent: ' + info.response);
+                    }
+                }); 
+                res.render('thanks.ejs');
             }
         })
+        
 })
 
 app.post('/delaction', urlencodedParser, function(req, res){
@@ -237,7 +279,9 @@ app.post('/delaction', urlencodedParser, function(req, res){
                 console.log(result);
 
                 if(result.length > 0){
-                    if(result[0].addedby == userid){
+                    console.log(store.get('userid').name);
+                    if(result[0].addedby == store.get('userid').name){
+
                     if(result[0].Availability == 1){
                     mysqlConnection.query("DELETE FROM new_Sem4_Project.Book where Book_name = ? and book_author=?",
                         [req.body.delbookname,req.body.delbookauthor], function(err, result, fields){
@@ -247,7 +291,7 @@ app.post('/delaction', urlencodedParser, function(req, res){
                         })}
                     else if(result[0].Availability >= 2){
                         mysqlConnection.query("Update Book set Availability=(Availability-1) where Book_name = ? and book_author=?",
-                            [req.body.delbookauthor], function(err, result, fields){
+                            [req.body.delbookname, req.body.delbookauthor], function(err, result, fields){
                                 if(err) throw err;
                                 console.log('Book deleted');
                                 res.send('Deleted and updated');
@@ -296,31 +340,31 @@ app.post('/searchaction', urlencodedParser, function(req, res){
 })
 
 
-app.post('/addBook', urlencodedParser, upload.single('image'), function(req, res) {
+app.post('/addBook', urlencodedParser, /*upload.single('image'),*/ function(req, res) {
     
     console.log('inside post');
     console.log(req.file);
     console.log(req.body);
     
-    var loc = __dirname + '/' + req.body.file.path;
-    console.log(loc);
+    //var loc = __dirname + '/' + req.body.file.path;
+    //console.log(loc);
 
     if(req.body.bookname)
         {
-            var values3 = {
+            var values = {
                 Book_name: req.body.bookname, 
                 book_author: req.body.bookauthor, 
-                Image: fs.readFileSync(loc),
+                //Image: fs.readFileSync(loc),
                 Image : req.query.file,
                 Description: req.body.desc, 
                 Price: req.body.bookprice, 
                 Availability: '1',
                 subject_code: req.body.subcode,
-                addedby : userid
+                addedby : store.get('userid').name
             };
-             
+            
             mysqlConnection.query("SELECT * FROM `new_Sem4_Project`.`Book` WHERE Book_name = ? AND  book_author = ? and addedby = ?",
-                                    [values3.Book_name, values3.book_author, values3.addedby], function (err, result, fields) {
+                                    [values.Book_name, values.book_author, values.addedby], function (err, result, fields) {
                 if (err) throw err;
                 
                 console.log(result);
@@ -328,7 +372,7 @@ app.post('/addBook', urlencodedParser, upload.single('image'), function(req, res
                 if(result.length > 0)
                 {
                     mysqlConnection.query("UPDATE `Book` SET Availability = (Availability + 1) WHERE Book_name = ?", 
-                                            [values3.Book_name], function (err, result, fields) {
+                                            [values.Book_name], function (err, result, fields) {
                         if(err) throw err;
                         console.log(result);
                     })
@@ -336,9 +380,9 @@ app.post('/addBook', urlencodedParser, upload.single('image'), function(req, res
                 }
                 else
                 {
-                    console.log(values3);
+                    console.log(values);
                     var sql = "INSERT INTO `new_Sem4_Project`.`Book` SET ?";
-                    mysqlConnection.query(sql, [values3], function(err, result, fields) {
+                    mysqlConnection.query(sql, [values], function(err, result, fields) {
                         if(err)
                             throw err;
                         console.log(result);
@@ -362,7 +406,9 @@ app.post('/', urlencodedParser, function(req, res) {
                 
         if(result.length > 0)
         {
-            userid = result[0].User_id;
+            
+            store.set('userid', { name:result[0].User_id });
+            console.log(store.get('userid').name);
             res.render('wtafrontpage.ejs');
         }
         else
@@ -390,6 +436,7 @@ app.post('/', urlencodedParser, function(req, res) {
         
 });
 
+// to be completed..
 
 app.post('/SignUp', urlencodedParser, function(req, res) {
     console.log(req.body);
@@ -421,7 +468,9 @@ app.post('/SignUp', urlencodedParser, function(req, res) {
                     [user_details.Phone_number], function(err, result, fields){
                         if(err) throw err;
                         console.log(result[0].User_id);
-                        userid = result[0].User_id;
+                        //userid = result[0].User_id;
+                        store.set('userid', { name:result[0].User_id });
+                        console.log(store.get('userid').name);
                     })
                 res.render('wtafrontpage.ejs');
             }
@@ -441,34 +490,31 @@ app.post('/book', urlencodedParser, function(req ,res){
                 if(err) throw err;
                 console.log(result);
                 res.render('book',{id:result[0].book_id,name:result[0].Book_name,author:result[0].book_author,image:'NULL',desc:result[0].Description,price:result[0].Price,available:result[0].Availability,subjcode:result[0].subject_code});
-                console.log(userid);
-                bookid = result[0].book_id;
+                console.log(store.get('userid').name);
+                //bookid = result[0].book_id;
+                store.set('bookid', { name:result[0].book_id });
+                console.log(store.get('bookid').name);
             }
             else{
                 console.log('Book not found');
             }
         })
-});
+})
 
-
-app.post('/addtocart/:data', urlencodedParser, function(req, res){
+app.post('/addtocart',urlencodedParser, function(req, res){
     console.log('in add to cart post');
-    console.log(req.params.data);
     mysqlConnection.query("select * from new_Sem4_Project.Book where book_id = ?",
-        [req.params.data],function(err, result, fields){
-            console.log(result);
+        [store.get('bookid').name],function(err, result, fields){
             if(result.length > 0){
                 if(err) throw err;
                 var values = {
-                    bid : req.params.data,
-                    uid : userid,
+                    bid : store.get('bookid').name,
+                    uid : store.get('userid').name,
                     bookname : result[0].Book_name,
                     bookauthor : result[0].book_author,
                     price_of_book : result[0].Price,
                     no_of_books : '1'
                 }
-                console.log('values:');
-                console.log(values);
                 mysqlConnection.query('Select * from new_Sem4_Project.cart where bid = ? and uid = ?',
                     [values.bid, values.uid], function(err, result, fields){
                         if(err) throw err;
@@ -493,10 +539,8 @@ app.post('/addtocart/:data', urlencodedParser, function(req, res){
                     })
                 
             }
-        });
-    
-    res.redirect( req.originalUrl.split("/")[0] + '/wtafrontpage' );
-
-});
+        })
+    res.render('wtafrontpage.ejs');
+})
 
 app.listen(3000);
